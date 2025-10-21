@@ -1,0 +1,42 @@
+package com.optic.console.application.service;
+
+package com.optic.console.application.user;
+
+import com.optic.console.domain.user.*;
+import com.optic.console.infrastructure.security.JwtService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
+    public void register(RegisterRequest request) {
+        var user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .build();
+        userRepository.save(user);
+    }
+
+    public AuthResponse login(LoginRequest request) {
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        var token = jwtService.generateToken(user.getEmail());
+        var response = new AuthResponse();
+        response.setToken(token);
+        response.setEmail(user.getEmail());
+        response.setFullName(user.getFullName());
+        return response;
+    }
+}
