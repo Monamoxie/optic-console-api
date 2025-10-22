@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: optic_postgres
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pg_data:./.docker/db_data
+
+  java:
+    build:
+      context: .
+      dockerfile: ./.docker/Dockerfile.java
+    container_name: optic_console_java
+    env_file:
+      - .env
+    ports:
+      - "${BACKEND_PORT}:8080"
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:${POSTGRES_PORT}/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+volumes:
+  pg_data:
