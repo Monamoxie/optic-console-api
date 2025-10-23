@@ -11,7 +11,7 @@ services:
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
-      - pg_data:./.docker/db_data
+      - ${PWD}/.docker/db_data:/var/lib/postgresql/data
 
   java:
     build:
