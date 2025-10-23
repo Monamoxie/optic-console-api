@@ -1,9 +1,10 @@
 package com.optic.console.application.service;
 
-package com.optic.console.application.user;
-
 import com.optic.console.domain.user.*;
-import com.optic.console.infrastructure.security.JwtService;
+import com.optic.console.domain.user.dto.AuthResponse;
+import com.optic.console.domain.user.dto.LoginRequest;
+import com.optic.console.domain.user.dto.RegisterRequest;
+import com.optic.console.infrastructure.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
-package com.optic.console.api.user;
+package com.optic.console.api.auth;
 
-import com.optic.console.application.service.*;
+import com.optic.console.application.service.AuthService;
 import com.optic.console.domain.user.dto.AuthResponse;
 import com.optic.console.domain.user.dto.LoginRequest;
 import com.optic.console.domain.user.dto.RegisterRequest;
