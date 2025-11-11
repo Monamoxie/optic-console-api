@@ -1,26 +1,24 @@
 # Build stage
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-eclipse-temurin-21 AS base
 WORKDIR /app
 COPY pom.xml .
-RUN mvn dependency:go-offline
+RUN mvn -B dependency:go-offline
 
+# Development stage
+FROM base AS dev
+RUN mvn -B dependency:get -Dartifact=org.springframework.boot:spring-boot-devtools:3.4.5
 
-# For development
-FROM maven:3.9.9-eclipse-temurin-21 AS dev
-WORKDIR /app
-COPY . .
-EXPOSE 5005
-CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.profiles=dev","-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
+# for extracting springboot version from pom.xml and automatically using that to download matching dev tools
+#RUN SPRING_BOOT_VERSION=$(mvn help:evaluate -Dexpression=project.parent.version -q -DforceStdout) && \
+#    mvn dependency:get -DgroupId=org.springframework.boot -DartifactId=spring-boot-devtools -Dversion=${SPRING_BOOT_VERSION}
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005","-Dspring-boot.run.profiles=dev","-DskipTests","-Dmaven.test.skip=true","-Dspring-boot.run.jvmArguments=-Xmx512m -XX:MaxRAMPercentage=75.0"]
 
-
-# For production
-FROM build AS prod
+FROM base AS builder
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
-# Final production image
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
