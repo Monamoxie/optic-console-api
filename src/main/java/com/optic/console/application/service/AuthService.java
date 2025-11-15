@@ -21,7 +21,9 @@ public class AuthService {
         var user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .status("active")
                 .build();
         userRepository.save(user);
     }
@@ -37,7 +39,6 @@ public class AuthService {
         var response = new AuthResponse();
         response.setToken(token);
         response.setEmail(user.getEmail());
-        response.setFullName(user.getFullName());
         return response;
     }
 }

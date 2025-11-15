@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -20,8 +20,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public void register(@RequestBody RegisterRequest request)  throws Exception {
-        return DebugUtil.dd(request);
-        System.out.println("DDKDKD");
+        log.info("This is an info log :::: HELLO WORLD 2");
         authService.register(request);
     }
 
