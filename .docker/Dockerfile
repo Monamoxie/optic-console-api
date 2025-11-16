@@ -11,7 +11,7 @@ RUN mvn -B dependency:get -Dartifact=org.springframework.boot:spring-boot-devtoo
 # for extracting springboot version from pom.xml and automatically using that to download matching dev tools
 #RUN SPRING_BOOT_VERSION=$(mvn help:evaluate -Dexpression=project.parent.version -q -DforceStdout) && \
 #    mvn dependency:get -DgroupId=org.springframework.boot -DartifactId=spring-boot-devtools -Dversion=${SPRING_BOOT_VERSION}
-CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005","-Dspring-boot.run.profiles=dev","-DskipTests","-Dmaven.test.skip=true","-Dspring-boot.run.jvmArguments=-Xmx512m -XX:MaxRAMPercentage=75.0"]
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.profiles=dev", "-DskipTests", "-Dmaven.test.skip=true", "-Dspring-boot.run.jvmArguments=-Xmx512m -XX:MaxRAMPercentage=75.0"]
 
 FROM base AS builder
 COPY src ./src

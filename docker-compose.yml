@@ -29,28 +29,30 @@ services:
       dockerfile: .docker/Dockerfile
       target: ${BUILD_TARGET:-dev}
     container_name: optic_console_java
-    env_file:
-      - .env
     volumes:
       - .:/app
-      - ~/.m2:/root/.m2  # Cache Maven dependencies
-      - /app/target/
-      - /app/.m2/
+      - m2-cache:/root/.m2  # Cache Maven dependencies
     ports:
       - "${BACKEND_PORT}:8080"
       - "5005:5005"  # For remote debugging
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:${POSTGRES_PORT}/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # JDWP: configure debugger only here to avoid duplicates
+#      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
+      # Ensure other common sources don't re-inject
+      JDK_JAVA_OPTIONS: ""
+      MAVEN_OPTS: ""
+      JAVA_OPTS: ""
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:${POSTGRES_PORT}/${POSTGRES_DB}
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
-      - SPRING_PROFILES_ACTIVE=dev,${SPRING_PROFILES_ACTIVE}
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     networks:
       - oc_network
 
 volumes:
+  m2-cache:
   pg_data:
