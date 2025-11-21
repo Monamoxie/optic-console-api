@@ -21,4 +21,9 @@ public class User {
     private String lastName;
 
     private String status;
+    
+    @Enumerated(EnumType.STRING)
+    private Role role;
+    
+    private boolean enabled;
 }
