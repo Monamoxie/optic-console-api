@@ -17,3 +17,4 @@ mvnw.cmd
 *.tar.gz
 *.rar
 .DS_Store
+.docker/db_data
