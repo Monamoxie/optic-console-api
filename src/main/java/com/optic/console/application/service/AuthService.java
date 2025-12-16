@@ -5,6 +5,7 @@ import com.optic.console.domain.user.User;
 import com.optic.console.domain.user.UserStatus;
 import com.optic.console.domain.user.UserRepository;
 import com.optic.console.domain.user.dto.AuthResponse;
+import com.optic.console.domain.user.dto.ForgotPasswordRequest;
 import com.optic.console.domain.user.dto.LoginRequest;
 import com.optic.console.domain.user.dto.RegisterRequest;
 import com.optic.console.domain.user.exception.UserAlreadyExistsException;
@@ -74,5 +75,16 @@ public class AuthService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .build();
+    }
+
+    public boolean forgotPasswordRequest(ForgotPasswordRequest request) {
+        var user = userRepository.findByEmailIgnoreCase(request.getEmail());
+
+        if (user.isPresent()) {
+            //send forgot password email
+            log.info("ready to send emil");
+        }
+
+        return true;
     }
 }

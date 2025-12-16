@@ -1,10 +1,7 @@
 package com.optic.console.api.auth;
 
 import com.optic.console.application.service.AuthService;
-import com.optic.console.domain.user.dto.ApiResponse;
-import com.optic.console.domain.user.dto.AuthResponse;
-import com.optic.console.domain.user.dto.LoginRequest;
-import com.optic.console.domain.user.dto.RegisterRequest;
+import com.optic.console.domain.user.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,4 +45,18 @@ public class AuthController {
                         .build()
         );
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<?>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPasswordRequest(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Password reset email sent successfully.")
+                        .build()
+        );
+    }
+
 }
