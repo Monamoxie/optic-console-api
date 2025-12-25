@@ -78,4 +78,9 @@ public class User implements UserDetails {
     public boolean isCredentialsNonExpired() {
         return true;
     }
+
+
+    public String getFullName() {
+        return this.firstName + " " + this.lastName;
+    }
 }

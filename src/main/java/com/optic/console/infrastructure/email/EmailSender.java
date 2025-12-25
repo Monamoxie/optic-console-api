@@ -16,7 +16,7 @@ public class EmailSender {
     private JavaMailSender mailSender;
     private TemplateEngine templateEngine;
 
-    public void EmailService(JavaMailSender mailSender, TemplateEngine templateEngine) {
+    public void EmailSender(JavaMailSender mailSender, TemplateEngine templateEngine) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
     }
