@@ -16,7 +16,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class VerificationTokenService {
-    private final VerificationTokenService verificationTokenService;
     private final VerificationTokenRepository verificationTokenRepository;
 
     @Transactional
