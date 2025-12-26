@@ -9,13 +9,19 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.util.HashMap;
 import java.util.Map;
-
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final Environment environment;
+
+    public GlobalExceptionHandler(Environment environment) {
+        this.environment = environment;
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -73,7 +79,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.<Void>builder()
                         .success(false)
-                        .message("An unexpected error occurred. Please try again later.")
+                        .message("An unexpected error occurred:" + cleanErrorMessage(ex.getMessage()))
                         .build());
+    }
+
+    private String cleanErrorMessage(String message) {
+
+        if (message == null) {
+            return "An unexpected error occurred";
+        }
+
+        boolean isProduction = environment.acceptsProfiles(Profiles.of("prod"));
+
+        if (!isProduction) {
+           return message;
+        }
+
+        // Remove Java method signatures
+        if (message.contains("public ")) {
+            message = message.substring(0, message.indexOf("public ")).trim();
+        }
+
+        // Remove any class names in the format com.package.ClassName
+        message = message.replaceAll("\\b[a-z]+(?:\\.[a-z0-9]+)*\\.[A-Z][a-zA-Z0-9_]*(?:\\.[a-zA-Z0-9_]+)*\\b", "");
+
+        // Clean up any double spaces or leading/trailing punctuation
+        message = message.replaceAll("\\s+", " ").trim();
+        message = message.replaceAll("^[\\s,;:.!?]+", "").trim();
+
+        return message.isEmpty() ? "An unexpected error occurred" : message;
     }
 }
