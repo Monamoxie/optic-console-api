@@ -1,25 +1,23 @@
 package com.optic.console.infrastructure.email;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+
 import java.nio.charset.StandardCharsets;
 
 @Service
+@RequiredArgsConstructor
 public class EmailSender {
 
-    private JavaMailSender mailSender;
-    private TemplateEngine templateEngine;
-
-    public void EmailSender(JavaMailSender mailSender, TemplateEngine templateEngine) {
-        this.mailSender = mailSender;
-        this.templateEngine = templateEngine;
-    }
+    private final JavaMailSender mailSender;
+    private final SpringTemplateEngine templateEngine;
 
     public void sendEmail(String to, String subject, String templateName, Context context) {
         try {
@@ -41,4 +39,9 @@ public class EmailSender {
             throw new RuntimeException("Failed to send email to " + to, e);
         }
     }
+
+    public String renderFragment(String templateName, Context context) {
+        return templateEngine.process(templateName, context);
+    }
+
 }
