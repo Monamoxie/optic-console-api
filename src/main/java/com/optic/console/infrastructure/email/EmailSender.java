@@ -1,6 +1,9 @@
 package com.optic.console.infrastructure.email;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -14,12 +17,16 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
+@Getter
+@Setter
 public class EmailSender {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
+    private String templatePath = "email/base";
 
-    public void sendEmail(String to, String subject, String templateName, Context context) {
+    public void sendEmail(String to, String subject, String fragmentContent) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(
@@ -28,7 +35,10 @@ public class EmailSender {
                     StandardCharsets.UTF_8.name()
             );
 
-            String html = templateEngine.process(templateName, context);
+            Context mainContext = new Context();
+            mainContext.setVariable("content", fragmentContent);
+
+            String html = templateEngine.process(getTemplatePath(), mainContext);
 
             helper.setTo(to);
             helper.setSubject(subject);
@@ -43,5 +53,4 @@ public class EmailSender {
     public String renderFragment(String templateName, Context context) {
         return templateEngine.process(templateName, context);
     }
-
 }
