@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<testcontainers.version>1.19.3</testcontainers.version>
+		<jakarta.mail.version>2.0.4</jakarta.mail.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -123,8 +124,19 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.eclipse.angus</groupId>
+			<artifactId>jakarta.mail</artifactId>
+			<version>${jakarta.mail.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>4.0.0</version>
 		</dependency>
 	</dependencies>
 
