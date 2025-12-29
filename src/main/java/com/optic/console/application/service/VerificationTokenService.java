@@ -1,5 +1,6 @@
 package com.optic.console.application.service;
 
+import com.optic.console.application.TokenGenerator;
 import com.optic.console.domain.auth.TokenType;
 import com.optic.console.domain.auth.VerificationToken;
 import com.optic.console.domain.auth.VerificationTokenRepository;
@@ -11,12 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class VerificationTokenService {
     private final VerificationTokenRepository verificationTokenRepository;
+    private final TokenGenerator tokenGenerator;
 
     @Transactional
     public VerificationToken createToken(User user, TokenType type, Duration validity) {
@@ -29,7 +30,7 @@ public class VerificationTokenService {
         VerificationToken token = new VerificationToken();
         token.setUser(user);
         token.setType(type);
-        token.setToken(UUID.randomUUID().toString());
+        token.setToken(tokenGenerator.generate(32));
         token.setExpiresAt(LocalDateTime.now().plus(validity));
 
         return verificationTokenRepository.save(token);
