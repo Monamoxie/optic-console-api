@@ -1,5 +1,7 @@
 package com.optic.console.application.service;
 
+import com.optic.console.domain.auth.TokenType;
+import com.optic.console.domain.auth.VerificationToken;
 import com.optic.console.domain.user.Role;
 import com.optic.console.domain.user.User;
 import com.optic.console.domain.user.UserStatus;
@@ -9,6 +11,7 @@ import com.optic.console.domain.user.dto.ForgotPasswordRequest;
 import com.optic.console.domain.user.dto.LoginRequest;
 import com.optic.console.domain.user.dto.RegisterRequest;
 import com.optic.console.domain.user.exception.UserAlreadyExistsException;
+import com.optic.console.infrastructure.email.EmailService;
 import com.optic.console.infrastructure.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,6 +31,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
+    private final VerificationTokenService verificationTokenService;
+    private final String baseUrl;
 
     @Transactional
     public void register(RegisterRequest request) {
@@ -77,14 +85,15 @@ public class AuthService {
                 .build();
     }
 
-    public boolean forgotPasswordRequest(ForgotPasswordRequest request) {
-        var user = userRepository.findByEmailIgnoreCase(request.getEmail());
+    public void handleForgotPasswordRequest(ForgotPasswordRequest request) {
+        var user = userRepository.findByEmailIgnoreCase(request.getEmail()).orElse(null);
 
-        if (user.isPresent()) {
-            //send forgot password email
-            log.info("ready to send emil");
+        if (user != null) {
+            VerificationToken verificationToken = verificationTokenService.createToken(user, TokenType.PASSWORD_RESET,
+                    Duration.ofHours(1));
+            String resetLink = baseUrl + "/reset-password?token=" + verificationToken.getToken();
+
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetLink);
         }
-
-        return true;
     }
 }
