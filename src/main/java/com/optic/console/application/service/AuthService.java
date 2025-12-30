@@ -1,8 +1,8 @@
 package com.optic.console.application.service;
 
+import com.optic.console.config.ApplicationProperties;
 import com.optic.console.domain.auth.TokenType;
 import com.optic.console.domain.auth.VerificationToken;
-import com.optic.console.domain.user.Role;
 import com.optic.console.domain.user.User;
 import com.optic.console.domain.user.UserStatus;
 import com.optic.console.domain.user.UserRepository;
@@ -33,7 +33,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final VerificationTokenService verificationTokenService;
-    private final String baseUrl;
+    private final ApplicationProperties applicationProperties;
 
     @Transactional
     public void register(RegisterRequest request) {
@@ -91,7 +91,7 @@ public class AuthService {
         if (user != null) {
             VerificationToken verificationToken = verificationTokenService.createToken(user, TokenType.PASSWORD_RESET,
                     Duration.ofHours(1));
-            String resetLink = baseUrl + "/reset-password?token=" + verificationToken.getToken();
+            String resetLink = applicationProperties.getUrl() + "/reset-password?token=" + verificationToken.getToken();
 
             emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetLink);
         }
