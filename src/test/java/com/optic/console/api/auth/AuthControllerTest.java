@@ -3,6 +3,7 @@ package com.optic.console.api.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.optic.console.application.service.AuthService;
 import com.optic.console.domain.user.dto.AuthResponse;
+import com.optic.console.domain.user.dto.ForgotPasswordRequest;
 import com.optic.console.domain.user.dto.LoginRequest;
 import com.optic.console.domain.user.dto.RegisterRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -126,5 +127,53 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").exists());
+    }
+    
+    @Test
+    void forgotPassword_ValidEmail_ShouldReturnOk() throws Exception {
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail(testEmail);
+
+        doNothing().when(authService).handleForgotPasswordRequest(any(ForgotPasswordRequest.class));
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Password reset email sent successfully."));
+    }
+    
+    @Test
+    void forgotPassword_InvalidEmail_ShouldReturnBadRequest() throws Exception {
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail("invalid-email");
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.data").isMap())
+                .andExpect(jsonPath("$.data").isNotEmpty());
+    }
+    
+    @Test
+    void forgotPassword_EmptyEmail_ShouldReturnBadRequest() throws Exception {
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail("");
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.data").isMap())
+                .andExpect(jsonPath("$.data").isNotEmpty());
     }
 }
