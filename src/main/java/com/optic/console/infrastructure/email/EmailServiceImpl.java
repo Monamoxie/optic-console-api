@@ -13,6 +13,10 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendPasswordResetEmail(String to, String name, String resetLink) {
+        if (to == null || resetLink == null) {
+            throw new NullPointerException("Email and reset link cannot be null");
+        }
+
         Context context = new Context();
         context.setVariable("name", name);
         context.setVariable("resetLink", resetLink);
