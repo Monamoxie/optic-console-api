@@ -176,4 +176,48 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.data").isMap())
                 .andExpect(jsonPath("$.data").isNotEmpty());
     }
+
+    @Test
+    void register_MissingRequiredFields_ShouldReturnBadRequest() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Validation failed"));
+    }
+
+    @Test
+    void login_MissingRequiredFields_ShouldReturnBadRequest() throws Exception {
+        LoginRequest request = new LoginRequest();
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Validation failed"));
+    }
+
+    @Test
+    void register_WithUppercaseEmail_ShouldSucceed() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("TEST@EXAMPLE.COM");
+        request.setPassword(testPassword);
+        request.setFirstName("Test");
+        request.setLastName("User");
+
+        doNothing().when(authService).register(any(RegisterRequest.class));
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true));
+    }
 }
