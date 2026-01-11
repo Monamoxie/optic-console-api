@@ -1,6 +1,5 @@
 package com.optic.console.infrastructure.email;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -31,37 +30,31 @@ class EmailServiceImplTest {
     private final String testEmail = "test@example.com";
     private final String testName = "Test User";
     private final String testResetLink = "https://example.com/reset-password?token=abc123";
+    private final String forgotPasswordRequestEmailTemplate = "email/auth/forgot-password-request";
 
     @Test
     void sendPasswordResetEmail_Success() {
-
-        String expectedTemplate = "email/auth/forgot-password-request";
-        String expectedSubject = "Password Reset - Optic Console";
-
+        when(emailSender.renderFragment(anyString(), any())).thenReturn("rendered-email");
 
         emailService.sendPasswordResetEmail(testEmail, testName, testResetLink);
 
+        verify(emailSender).renderFragment(eq(forgotPasswordRequestEmailTemplate), contextCaptor.capture());
 
-        verify(emailSender).renderFragment(eq(expectedTemplate), contextCaptor.capture());
-        
-        // Verify context variables
         Context capturedContext = contextCaptor.getValue();
         assertEquals(testName, capturedContext.getVariable("name"));
         assertEquals(testResetLink, capturedContext.getVariable("resetLink"));
+        assertEquals(forgotPasswordRequestEmailTemplate + " :: content", capturedContext.getVariable("content"));
         
-
         verify(emailSender).sendEmail(
                 eq(testEmail),
-                eq(expectedSubject),
-                anyString()
+                eq("Password Reset - Optic Console"),
+                eq("rendered-email")
         );
     }
 
     @Test
     void sendPasswordResetEmail_EmptyName_StillSendsEmail() {
-
         emailService.sendPasswordResetEmail(testEmail, "", testResetLink);
-
 
         verify(emailSender).renderFragment(anyString(), contextCaptor.capture());
         Context capturedContext = contextCaptor.getValue();
@@ -69,36 +62,55 @@ class EmailServiceImplTest {
     }
 
     @Test
-    void sendPasswordResetEmail_EmailSendingFails_LogsError() {
+    void sendPasswordResetEmail_EmailSendingFails_PropagatesException() {
+        when(emailSender.renderFragment(anyString(), any())).thenReturn("rendered-email");
 
         String errorMessage = "Failed to send email";
         doThrow(new RuntimeException(errorMessage))
             .when(emailSender).sendEmail(anyString(), anyString(), anyString());
 
-
-        assertThrows(RuntimeException.class, () -> {
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             emailService.sendPasswordResetEmail(testEmail, testName, testResetLink);
         });
         
-
+        assertEquals(errorMessage, exception.getMessage());
+        verify(emailSender).renderFragment(eq(forgotPasswordRequestEmailTemplate), any());
         verify(emailSender).sendEmail(anyString(), anyString(), anyString());
     }
 
     @Test
-    void sendPasswordResetEmail_NullParameters_ThrowsException() {
-
+    void sendPasswordResetEmail_NullEmail_ThrowsException() {
         assertThrows(NullPointerException.class, () -> {
             emailService.sendPasswordResetEmail(null, testName, testResetLink);
         });
+    }
 
-
+    @Test
+    void sendPasswordResetEmail_NullResetLink_ThrowsException() {
         assertThrows(NullPointerException.class, () -> {
             emailService.sendPasswordResetEmail(testEmail, testName, null);
         });
-        
+    }
 
-        assertDoesNotThrow(() -> {
-            emailService.sendPasswordResetEmail(testEmail, null, testResetLink);
-        });
+    @Test
+    void sendPasswordResetEmail_NullName_StillSendsEmail() {
+        when(emailSender.renderFragment(anyString(), any())).thenReturn("rendered-email");
+
+        emailService.sendPasswordResetEmail(testEmail, null, testResetLink);
+
+        verify(emailSender).renderFragment(anyString(), contextCaptor.capture());
+        Context capturedContext = contextCaptor.getValue();
+        assertNull(capturedContext.getVariable("name"), "Name should be null");
+        assertEquals(testResetLink, capturedContext.getVariable("resetLink"));
+        verify(emailSender).sendEmail(eq(testEmail), eq("Password Reset - Optic Console"), eq("rendered-email"));
+    }
+
+    @Test
+    void sendPasswordResetEmail_RenderFragmentReturnsNull_HandlesGracefully() {
+        when(emailSender.renderFragment(anyString(), any())).thenReturn(null);
+
+        emailService.sendPasswordResetEmail(testEmail, testName, testResetLink);
+
+        verify(emailSender).sendEmail(eq(testEmail), eq("Password Reset - Optic Console"), eq(null));
     }
 }
