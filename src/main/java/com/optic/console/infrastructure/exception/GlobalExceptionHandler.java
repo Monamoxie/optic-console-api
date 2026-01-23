@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -108,5 +111,24 @@ public class GlobalExceptionHandler {
         message = message.replaceAll("^[\\s,;:.!?]+", "").trim();
 
         return message.isEmpty() ? "An unexpected error occurred" : message;
+    }
+
+    @ExceptionHandler(DebugException.class)
+    public ResponseEntity<String> handleDebugException(DebugException ex) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper()
+                    .enable(SerializationFeature.INDENT_OUTPUT);
+
+            String formatted = objectMapper.writeValueAsString(ex.getDebugItems());
+
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(formatted);
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Failed to format debug output\"}");
+        }
     }
 }
