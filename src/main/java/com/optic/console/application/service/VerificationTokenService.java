@@ -37,7 +37,7 @@ public class VerificationTokenService {
     }
 
     @Transactional
-    public boolean validateToken(String tokenString, TokenType type) {
+    public boolean isValidToken(String tokenString, TokenType type) {
         return verificationTokenRepository.findByTokenAndType(tokenString, type)
                 .map(token -> {
                     if (token.isExpired() || token.isUsed()) {

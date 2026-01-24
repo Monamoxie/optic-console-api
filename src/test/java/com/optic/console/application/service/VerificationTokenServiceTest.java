@@ -84,7 +84,7 @@ class VerificationTokenServiceTest {
     }
 
     @Test
-    void validateToken_ValidToken_ReturnsTrueAndMarksAsUsed() {
+    void isValidToken_ValidToken_ReturnsTrueAndMarksAsUsed() {
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
         token.setType(testTokenType);
@@ -94,7 +94,7 @@ class VerificationTokenServiceTest {
             .thenReturn(Optional.of(token));
         when(verificationTokenRepository.save(any(VerificationToken.class))).thenReturn(token);
 
-        boolean isValid = verificationTokenService.validateToken(testToken, testTokenType);
+        boolean isValid = verificationTokenService.isValidToken(testToken, testTokenType);
 
         assertTrue(isValid);
         assertNotNull(token.getUsedAt());
@@ -102,7 +102,7 @@ class VerificationTokenServiceTest {
     }
 
     @Test
-    void validateToken_ExpiredToken_ReturnsFalse() {
+    void isValidToken_ExpiredToken_ReturnsFalse() {
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
         token.setType(testTokenType);
@@ -111,7 +111,7 @@ class VerificationTokenServiceTest {
         when(verificationTokenRepository.findByTokenAndType(testToken, testTokenType))
             .thenReturn(Optional.of(token));
 
-        boolean isValid = verificationTokenService.validateToken(testToken, testTokenType);
+        boolean isValid = verificationTokenService.isValidToken(testToken, testTokenType);
 
         assertFalse(isValid);
         assertNull(token.getUsedAt());
@@ -119,7 +119,7 @@ class VerificationTokenServiceTest {
     }
 
     @Test
-    void validateToken_AlreadyUsed_ReturnsFalse() {
+    void isValidToken_AlreadyUsed_ReturnsFalse() {
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
         token.setType(testTokenType);
@@ -129,18 +129,18 @@ class VerificationTokenServiceTest {
         when(verificationTokenRepository.findByTokenAndType(testToken, testTokenType))
             .thenReturn(Optional.of(token));
 
-        boolean isValid = verificationTokenService.validateToken(testToken, testTokenType);
+        boolean isValid = verificationTokenService.isValidToken(testToken, testTokenType);
 
         assertFalse(isValid);
         verify(verificationTokenRepository, never()).save(any());
     }
 
     @Test
-    void validateToken_NonExistentToken_ReturnsFalse() {
+    void isValidToken_NonExistentToken_ReturnsFalse() {
         when(verificationTokenRepository.findByTokenAndType("nonexistent", testTokenType))
             .thenReturn(Optional.empty());
 
-        boolean isValid = verificationTokenService.validateToken("nonexistent", testTokenType);
+        boolean isValid = verificationTokenService.isValidToken("nonexistent", testTokenType);
 
         assertFalse(isValid);
         verify(verificationTokenRepository, never()).save(any());
@@ -154,11 +154,11 @@ class VerificationTokenServiceTest {
     }
 
     @Test
-    void validateToken_NullTokenString_ReturnsFalse() {
+    void isValidToken_NullTokenString_ReturnsFalse() {
         when(verificationTokenRepository.findByTokenAndType(null, testTokenType))
             .thenReturn(Optional.empty());
 
-        boolean isValid = verificationTokenService.validateToken(null, testTokenType);
+        boolean isValid = verificationTokenService.isValidToken(null, testTokenType);
 
         assertFalse(isValid);
         verify(verificationTokenRepository).findByTokenAndType(null, testTokenType);
@@ -166,11 +166,11 @@ class VerificationTokenServiceTest {
     }
 
     @Test
-    void validateToken_NullTokenType_ReturnsFalse() {
+    void isValidToken_NullTokenType_ReturnsFalse() {
         when(verificationTokenRepository.findByTokenAndType(testToken, null))
             .thenReturn(Optional.empty());
 
-        boolean isValid = verificationTokenService.validateToken(testToken, null);
+        boolean isValid = verificationTokenService.isValidToken(testToken, null);
 
         assertFalse(isValid);
         verify(verificationTokenRepository).findByTokenAndType(testToken, null);
@@ -178,7 +178,7 @@ class VerificationTokenServiceTest {
     }
 
     @Test
-    void validateToken_ExpiredButNotUsed_ReturnsFalse() {
+    void isValidToken_ExpiredButNotUsed_ReturnsFalse() {
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
         token.setType(testTokenType);
@@ -187,7 +187,7 @@ class VerificationTokenServiceTest {
         when(verificationTokenRepository.findByTokenAndType(testToken, testTokenType))
             .thenReturn(Optional.of(token));
 
-        boolean isValid = verificationTokenService.validateToken(testToken, testTokenType);
+        boolean isValid = verificationTokenService.isValidToken(testToken, testTokenType);
 
         assertFalse(isValid);
         verify(verificationTokenRepository, never()).save(any());
