@@ -3,6 +3,7 @@ package com.optic.console.api.auth;
 import com.optic.console.application.service.AuthService;
 import com.optic.console.domain.user.dto.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -57,6 +58,20 @@ public class AuthController {
                         .message("Password reset email sent successfully.")
                         .build()
         );
+    }
+
+    @GetMapping("/reset-password")
+    public ResponseEntity<ApiResponse<?>> verifyResetPasswordRequest(
+            @RequestParam("token") @NotBlank String token
+    ) {
+            authService.handlePasswordResetTokenVerification(token);
+
+            return ResponseEntity.ok(
+                    ApiResponse.builder()
+                            .success(true)
+                            .message("Password reset token is valid")
+                            .build()
+            );
     }
 
 }

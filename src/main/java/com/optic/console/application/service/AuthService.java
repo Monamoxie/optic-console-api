@@ -3,6 +3,7 @@ package com.optic.console.application.service;
 import com.optic.console.config.ApplicationProperties;
 import com.optic.console.domain.auth.TokenType;
 import com.optic.console.domain.auth.VerificationToken;
+import com.optic.console.domain.auth.exception.InvalidTokenException;
 import com.optic.console.domain.user.User;
 import com.optic.console.domain.user.UserStatus;
 import com.optic.console.domain.user.UserRepository;
@@ -38,7 +39,6 @@ public class AuthService {
     @Transactional
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
-            log.warn("Registration attempt with existing email: {}", request.getEmail());
             throw new UserAlreadyExistsException("Email is already registered");
         }
 
@@ -96,4 +96,12 @@ public class AuthService {
             emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetLink);
         }
     }
+
+    public void handlePasswordResetTokenVerification(String token) {
+        if (!verificationTokenService.isValidToken(token, TokenType.PASSWORD_RESET)) {
+            throw new InvalidTokenException();
+        }
+    }
+
+
 }
