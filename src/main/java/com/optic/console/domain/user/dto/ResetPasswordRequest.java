@@ -10,4 +10,7 @@ public class ResetPasswordRequest {
     
     @NotBlank(message = "New password is required")
     private String newPassword;
+
+    @NotBlank(message = "New password confirmation is required")
+    private String newPasswordConfirmation;
 }

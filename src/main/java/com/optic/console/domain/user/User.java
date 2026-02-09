@@ -81,6 +81,16 @@ public class User implements UserDetails {
 
 
     public String getFullName() {
-        return this.firstName + " " + this.lastName;
+        String fullName = "";
+        if (firstName != null && !firstName.trim().isEmpty()) {
+            fullName += firstName.trim();
+        }
+        if (lastName != null && !lastName.trim().isEmpty()) {
+            if (!fullName.isEmpty()) {
+                fullName += " ";
+            }
+            fullName += lastName.trim();
+        }
+        return fullName.isEmpty() ? "User" : fullName;
     }
 }

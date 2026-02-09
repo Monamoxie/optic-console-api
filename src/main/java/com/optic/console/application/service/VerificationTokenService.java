@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -40,15 +41,18 @@ public class VerificationTokenService {
     public boolean isValidToken(String tokenString, TokenType type) {
         return verificationTokenRepository.findByTokenAndType(tokenString, type)
                 .map(token -> {
-                    if (token.isExpired() || token.isUsed()) {
-                        return false;
-                    }
-                    token.markAsUsed();
-                    verificationTokenRepository.save(token);
-                    return true;
+                    return !token.isExpired() && !token.isUsed();
+//                    token.markAsUsed();
+//                    verificationTokenRepository.save(token);
                 })
                 .orElse(false);
     }
+
+    public Optional<VerificationToken> getToken(String tokenString, TokenType type) {
+        return verificationTokenRepository.findByTokenAndType(tokenString, type);
+    }
+
+
 
     @Scheduled(cron = "0 0 0 * * ?") // Run daily at midnight
     @Transactional

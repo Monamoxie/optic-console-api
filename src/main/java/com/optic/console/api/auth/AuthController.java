@@ -20,7 +20,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/register")
+    @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Void>> register(
             @Valid @RequestBody RegisterRequest request) {
         authService.register(request);
@@ -72,6 +72,20 @@ public class AuthController {
                             .message("Password reset token is valid")
                             .build()
             );
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<?>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+        authService.handlePasswordReset(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Password reset token is valid")
+                        .build()
+        );
     }
 
 }

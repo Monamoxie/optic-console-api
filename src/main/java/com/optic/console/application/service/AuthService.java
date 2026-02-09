@@ -7,10 +7,7 @@ import com.optic.console.domain.auth.exception.InvalidTokenException;
 import com.optic.console.domain.user.User;
 import com.optic.console.domain.user.UserStatus;
 import com.optic.console.domain.user.UserRepository;
-import com.optic.console.domain.user.dto.AuthResponse;
-import com.optic.console.domain.user.dto.ForgotPasswordRequest;
-import com.optic.console.domain.user.dto.LoginRequest;
-import com.optic.console.domain.user.dto.RegisterRequest;
+import com.optic.console.domain.user.dto.*;
 import com.optic.console.domain.user.exception.UserAlreadyExistsException;
 import com.optic.console.infrastructure.email.EmailService;
 import com.optic.console.infrastructure.security.service.JwtService;
@@ -23,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -46,8 +44,8 @@ public class AuthService {
             var user = User.builder()
                     .email(request.getEmail().toLowerCase())
                     .password(passwordEncoder.encode(request.getPassword()))
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
+                    .firstName("")
+                    .lastName("")
                     .status(UserStatus.ACTIVE)
                     .build();
 
@@ -80,8 +78,8 @@ public class AuthService {
         return AuthResponse.builder()
                 .token(token)
                 .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
+                .firstName(user.getFirstName() != null ? user.getFirstName() : "")
+                .lastName(user.getLastName() != null ? user.getLastName() : "")
                 .build();
     }
 
@@ -100,6 +98,19 @@ public class AuthService {
     public void handlePasswordResetTokenVerification(String token) {
         if (!verificationTokenService.isValidToken(token, TokenType.PASSWORD_RESET)) {
             throw new InvalidTokenException();
+        }
+    }
+
+    public void handlePasswordReset(ResetPasswordRequest request) {
+        Optional<VerificationToken> matchedToken = verificationTokenService.getToken(request.getToken(), TokenType.PASSWORD_RESET);
+        if (matchedToken.isEmpty()) {
+            throw new InvalidTokenException();
+        }
+
+        // TODO: Implement password reset logic
+        // todo ::: TBC
+        if (matchedToken.get().getUser() != null) {
+            // Implementation needed
         }
     }
 
