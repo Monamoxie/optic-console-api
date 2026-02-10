@@ -1,0 +1,10 @@
+<div th:fragment="content">
+    <h2>Email Verification</h2>
+    <p>Hello <span th:text="${name}">User</span>,</p>
+    <p>Your account has been created. Please click on the following link to verify your email</p>
+    <p>
+        <a th:href="${verificationLink}" class="button">Verify Email</a>
+    </p>
+    <p>If you didn't request this, please ignore this email or contact support if you have questions.</p>
+    <p>This link will expire in 24 hours.</p>
+</div>

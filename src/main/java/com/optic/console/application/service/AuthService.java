@@ -37,7 +37,7 @@ public class AuthService {
     @Transactional
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
-            throw new UserAlreadyExistsException("Email is already registered");
+            throw new UserAlreadyExistsException("This email cannot be used.");
         }
 
         try {
@@ -49,11 +49,13 @@ public class AuthService {
                     .status(UserStatus.ACTIVE)
                     .build();
 
-            userRepository.save(user);
-            log.info("User registered successfully with email: {}", request.getEmail());
-            
-            // TODO: Send verification email
-            
+            User newUser = userRepository.save(user);
+            VerificationToken verificationToken = verificationTokenService.createToken(newUser, TokenType.EMAIL_VERIFICATION,
+                    Duration.ofHours(24));
+
+            emailService.sendEmailVerificationEmail(newUser.getEmail(),
+                    applicationProperties.getUrl() + "/email-verification?token=" + verificationToken.getToken());
+
         } catch (DataIntegrityViolationException e) {
             log.error("Database error during registration for email: {}", request.getEmail(), e);
             throw new RuntimeException("Registration failed due to a database error", e);
