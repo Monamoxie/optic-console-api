@@ -53,8 +53,6 @@ class AuthControllerTest {
         RegisterRequest request = new RegisterRequest();
         request.setEmail(testEmail);
         request.setPassword(testPassword);
-        request.setFirstName("Test");
-        request.setLastName("User");
 
         // The register method is void, so we don't need to return anything
         // Just verify the service method is called
@@ -208,8 +206,6 @@ class AuthControllerTest {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("TEST@EXAMPLE.COM");
         request.setPassword(testPassword);
-        request.setFirstName("Test");
-        request.setLastName("User");
 
         doNothing().when(authService).register(any(RegisterRequest.class));
 
