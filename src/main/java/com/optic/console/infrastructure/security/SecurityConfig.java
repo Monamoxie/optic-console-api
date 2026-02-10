@@ -1,5 +1,6 @@
 package com.optic.console.infrastructure.security;
 
+import com.optic.console.config.CorsProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import lombok.extern.slf4j.Slf4j;
-import java.util.Arrays;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -25,11 +27,12 @@ import java.util.Arrays;
 @Slf4j
 public class SecurityConfig {
 
+    private final CorsProperties corsProperties;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        log.info("This is an info log");
         http
-//            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/**").permitAll()
@@ -43,13 +46,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }
 
