@@ -70,8 +70,6 @@ class AuthServiceTest extends BaseTest {
         RegisterRequest request = new RegisterRequest();
         request.setEmail(testEmail);
         request.setPassword(testPassword);
-        request.setFirstName("Test");
-        request.setLastName("User");
 
         when(userRepository.existsByEmailIgnoreCase(testEmail)).thenReturn(false);
         when(passwordEncoder.encode(testPassword)).thenReturn(encodedPassword);
@@ -92,8 +90,6 @@ class AuthServiceTest extends BaseTest {
         RegisterRequest request = new RegisterRequest();
         request.setEmail(testEmail);
         request.setPassword(testPassword);
-        request.setFirstName("Test");
-        request.setLastName("User");
 
         when(userRepository.existsByEmailIgnoreCase(testEmail)).thenReturn(true);
 
@@ -156,8 +152,6 @@ class AuthServiceTest extends BaseTest {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("TEST@EXAMPLE.COM");
         request.setPassword(testPassword);
-        request.setFirstName("Test");
-        request.setLastName("User");
 
         when(userRepository.existsByEmailIgnoreCase("TEST@EXAMPLE.COM")).thenReturn(false);
         when(passwordEncoder.encode(testPassword)).thenReturn(encodedPassword);
@@ -180,8 +174,6 @@ class AuthServiceTest extends BaseTest {
         RegisterRequest request = new RegisterRequest();
         request.setEmail(testEmail);
         request.setPassword(testPassword);
-        request.setFirstName("Test");
-        request.setLastName("User");
 
         when(userRepository.existsByEmailIgnoreCase(testEmail)).thenReturn(false);
         when(passwordEncoder.encode(testPassword)).thenReturn(encodedPassword);
