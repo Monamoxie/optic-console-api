@@ -4,6 +4,7 @@ import com.optic.console.application.TokenGenerator;
 import com.optic.console.domain.auth.TokenType;
 import com.optic.console.domain.auth.VerificationToken;
 import com.optic.console.domain.auth.VerificationTokenRepository;
+import com.optic.console.domain.auth.exception.InvalidTokenException;
 import com.optic.console.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,10 +24,7 @@ public class VerificationTokenService {
     @Transactional
     public VerificationToken createToken(User user, TokenType type, Duration validity) {
         verificationTokenRepository.findByUserAndTypeAndUsedAtIsNull(user, type)
-                .ifPresent(token -> {
-                    token.markAsUsed();
-                    verificationTokenRepository.save(token);
-                });
+                .ifPresent(this::markAsUsed);
 
         VerificationToken token = new VerificationToken();
         token.setUser(user);
@@ -42,14 +40,23 @@ public class VerificationTokenService {
         return verificationTokenRepository.findByTokenAndType(tokenString, type)
                 .map(token -> {
                     return !token.isExpired() && !token.isUsed();
-//                    token.markAsUsed();
-//                    verificationTokenRepository.save(token);
                 })
                 .orElse(false);
     }
 
+    public VerificationToken getValidTokenOrThrowException(String tokenString, TokenType type) {
+        return verificationTokenRepository.findByTokenAndType(tokenString, type)
+                .filter(token -> !token.isExpired() && !token.isUsed())
+                .orElseThrow(InvalidTokenException::new);
+    }
+
     public Optional<VerificationToken> getToken(String tokenString, TokenType type) {
         return verificationTokenRepository.findByTokenAndType(tokenString, type);
+    }
+
+    void markAsUsed(VerificationToken token) {
+        token.markAsUsed();
+        verificationTokenRepository.save(token);
     }
 
 

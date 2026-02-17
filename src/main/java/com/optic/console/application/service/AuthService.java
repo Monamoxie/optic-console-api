@@ -9,6 +9,7 @@ import com.optic.console.domain.user.UserStatus;
 import com.optic.console.domain.user.UserRepository;
 import com.optic.console.domain.user.dto.*;
 import com.optic.console.domain.user.exception.UserAlreadyExistsException;
+import com.optic.console.domain.user.exception.UserDoesNotExistException;
 import com.optic.console.infrastructure.email.EmailService;
 import com.optic.console.infrastructure.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -54,7 +55,7 @@ public class AuthService {
                     Duration.ofHours(24));
 
             emailService.sendEmailVerificationEmail(newUser.getEmail(),
-                    applicationProperties.getUrl() + "/email-verification?token=" + verificationToken.getToken());
+                    applicationProperties.getFrontendUrl() + "/auth/verification/email?token=" + verificationToken.getToken());
 
         } catch (DataIntegrityViolationException e) {
             log.error("Database error during registration for email: {}", request.getEmail(), e);
@@ -91,7 +92,7 @@ public class AuthService {
         if (user != null) {
             VerificationToken verificationToken = verificationTokenService.createToken(user, TokenType.PASSWORD_RESET,
                     Duration.ofHours(1));
-            String resetLink = applicationProperties.getUrl() + "/reset-password?token=" + verificationToken.getToken();
+            String resetLink = applicationProperties.getFrontendUrl() + "/auth/verification/reset-password?token=" + verificationToken.getToken();
 
             emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetLink);
         }
@@ -103,17 +104,20 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public void handlePasswordReset(ResetPasswordRequest request) {
-        Optional<VerificationToken> matchedToken = verificationTokenService.getToken(request.getToken(), TokenType.PASSWORD_RESET);
-        if (matchedToken.isEmpty()) {
+        VerificationToken token = verificationTokenService.getValidTokenOrThrowException(
+                request.getToken(), TokenType.PASSWORD_RESET);
+
+        User user = token.getUser();
+
+        if (user == null) {
             throw new InvalidTokenException();
         }
 
-        // TODO: Implement password reset logic
-        // todo ::: TBC
-        if (matchedToken.get().getUser() != null) {
-            // Implementation needed
-        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        verificationTokenService.markAsUsed(token);
     }
 
 

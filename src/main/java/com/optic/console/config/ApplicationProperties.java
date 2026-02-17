@@ -12,4 +12,5 @@ import org.springframework.stereotype.Component;
 public class ApplicationProperties {
     private String url;
     private String name;
+    private String frontendUrl;
 }
