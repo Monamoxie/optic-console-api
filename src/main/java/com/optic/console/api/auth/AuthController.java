@@ -60,7 +60,7 @@ public class AuthController {
         );
     }
 
-    @GetMapping("/reset-password")
+    @GetMapping("/verification/reset-password")
     public ResponseEntity<ApiResponse<?>> verifyResetPasswordRequest(
             @RequestParam("token") @NotBlank String token
     ) {
@@ -83,7 +83,7 @@ public class AuthController {
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Password reset token is valid")
+                        .message("Password reset ws successful")
                         .build()
         );
     }
