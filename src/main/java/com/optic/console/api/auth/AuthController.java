@@ -1,6 +1,7 @@
 package com.optic.console.api.auth;
 
 import com.optic.console.application.service.AuthService;
+import com.optic.console.domain.auth.dto.EmailVerificationRequest;
 import com.optic.console.domain.user.dto.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -84,6 +85,20 @@ public class AuthController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Password reset ws successful")
+                        .build()
+        );
+    }
+
+    @PostMapping("/verification/email")
+    public ResponseEntity<ApiResponse<?>> verifyEmail(
+            @Valid @RequestBody EmailVerificationRequest request
+    ) {
+        authService.handleEmailVerification(request.getToken());
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Email verification was successful")
                         .build()
         );
     }

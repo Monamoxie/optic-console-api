@@ -1,0 +1,5 @@
+ALTER TABLE users
+    ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN email_verified_at TIMESTAMP WITH TIME ZONE NULL;
+
+CREATE INDEX IF NOT EXISTS idx_users_email_verified ON users (email_verified);

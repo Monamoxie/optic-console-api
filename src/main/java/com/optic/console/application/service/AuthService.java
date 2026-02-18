@@ -9,7 +9,6 @@ import com.optic.console.domain.user.UserStatus;
 import com.optic.console.domain.user.UserRepository;
 import com.optic.console.domain.user.dto.*;
 import com.optic.console.domain.user.exception.UserAlreadyExistsException;
-import com.optic.console.domain.user.exception.UserDoesNotExistException;
 import com.optic.console.infrastructure.email.EmailService;
 import com.optic.console.infrastructure.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +33,7 @@ public class AuthService {
     private final EmailService emailService;
     private final VerificationTokenService verificationTokenService;
     private final ApplicationProperties applicationProperties;
+    private final UserService userService;
 
     @Transactional
     public void register(RegisterRequest request) {
@@ -117,6 +117,20 @@ public class AuthService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+        verificationTokenService.markAsUsed(token);
+    }
+
+    @Transactional
+    public void handleEmailVerification(String tokenString) {
+        VerificationToken token = verificationTokenService.getValidTokenOrThrowException(
+                tokenString, TokenType.EMAIL_VERIFICATION);
+
+        User user = token.getUser();
+
+        if (user == null) {
+            throw new InvalidTokenException();
+        }
+        userService.markAsVerified(user);
         verificationTokenService.markAsUsed(token);
     }
 
