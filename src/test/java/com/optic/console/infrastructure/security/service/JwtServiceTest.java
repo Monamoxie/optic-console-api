@@ -37,7 +37,7 @@ class JwtServiceTest {
 
     @Test
     void generateToken_ValidEmail_ReturnsValidJwtToken() {
-        String token = jwtService.generateToken(TEST_EMAIL);
+        String token = jwtService.generateToken(TEST_EMAIL, false);
         
 
         assertNotNull(token, "Token should not be null");
@@ -59,8 +59,8 @@ class JwtServiceTest {
 
     @Test
     void generateToken_DifferentEmails_GenerateDifferentTokens() {
-        String token1 = jwtService.generateToken("user1@example.com");
-        String token2 = jwtService.generateToken("user2@example.com");
+        String token1 = jwtService.generateToken("user1@example.com", false);
+        String token2 = jwtService.generateToken("user2@example.com", false);
 
         assertNotEquals(token1, token2, "Tokens for different users should be different");
     }
@@ -68,21 +68,21 @@ class JwtServiceTest {
     @Test
     void generateToken_EmptyEmail_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> {
-            jwtService.generateToken("");
+            jwtService.generateToken("", false);
         }, "Should throw exception for empty email");
     }
 
     @Test
     void generateToken_NullEmail_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> {
-            jwtService.generateToken(null);
+            jwtService.generateToken(null, null);
         }, "Should throw exception for null email");
     }
 
     @Test
     void generateToken_WhitespaceOnlyEmail_ThrowsException() {
         assertThrows(IllegalArgumentException.class, () -> {
-            jwtService.generateToken("   ");
+            jwtService.generateToken("   ", false);
         }, "Should throw exception for whitespace-only email");
     }
 
@@ -90,7 +90,7 @@ class JwtServiceTest {
     void generateToken_ExpirationIsOneDay() {
         // Given
         long oneDayInMillis = 86400000L;
-        String token = jwtService.generateToken(TEST_EMAIL);
+        String token = jwtService.generateToken(TEST_EMAIL, false);
 
         // When
         Claims claims = Jwts.parserBuilder()
@@ -112,14 +112,14 @@ class JwtServiceTest {
     @Test
     void generateToken_SameEmailMultipleTimes_GeneratesValidTokensWithSameSubject() {
         // Generate multiple tokens for the same email
-        String token1 = jwtService.generateToken(TEST_EMAIL);
+        String token1 = jwtService.generateToken(TEST_EMAIL, true);
         // Ensure different timestamp by waiting at least 1 second (JWT uses seconds precision)
         try {
             Thread.sleep(1100); // Wait 1.1 seconds to ensure different timestamp
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        String token2 = jwtService.generateToken(TEST_EMAIL);
+        String token2 = jwtService.generateToken(TEST_EMAIL, true);
 
         // Both tokens should be valid and have the same subject
         Claims claims1 = Jwts.parserBuilder().setSigningKey(TEST_KEY).build()

@@ -111,7 +111,7 @@ class AuthServiceTest extends BaseTest {
 
         when(userRepository.findByEmailIgnoreCase(testEmail)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(testPassword, encodedPassword)).thenReturn(true);
-        when(jwtService.generateToken(testEmail)).thenReturn(testToken);
+        when(jwtService.generateToken(testEmail, false)).thenReturn(testToken);
 
         var response = authService.login(request);
 
