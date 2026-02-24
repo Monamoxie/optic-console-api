@@ -64,13 +64,18 @@ public class JwtService {
     }
 
 
-    public String generateToken(String subject) {
+    public String generateToken(String subject, Boolean rememberMe) {
         if (subject == null || subject.trim().isEmpty()) {
             throw new IllegalArgumentException("Subject cannot be null or empty");
         }
 
+        long effectiveExpiration = Boolean.TRUE.equals(rememberMe)
+                ? expirationMillis * 7
+                : expirationMillis;
+
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + expirationMillis);
+
+        Date expiration = new Date(now.getTime() + effectiveExpiration);
 
         return Jwts.builder()
                 .setSubject(subject.trim())

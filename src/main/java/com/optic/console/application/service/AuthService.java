@@ -75,7 +75,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        var token = jwtService.generateToken(user.getEmail());
+        var token = jwtService.generateToken(user.getEmail(), request.getRememberMe());
         log.info("User logged in successfully: {}", request.getEmail());
         
         return AuthResponse.builder()
