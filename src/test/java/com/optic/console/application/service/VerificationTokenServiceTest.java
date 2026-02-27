@@ -92,13 +92,12 @@ class VerificationTokenServiceTest {
         
         when(verificationTokenRepository.findByTokenAndType(testToken, testTokenType))
             .thenReturn(Optional.of(token));
-        when(verificationTokenRepository.save(any(VerificationToken.class))).thenReturn(token);
 
         boolean isValid = verificationTokenService.isValidToken(testToken, testTokenType);
 
         assertTrue(isValid);
-        assertNotNull(token.getUsedAt());
-        verify(verificationTokenRepository).save(token);
+        assertNull(token.getUsedAt());
+        verify(verificationTokenRepository, never()).save(any());
     }
 
     @Test

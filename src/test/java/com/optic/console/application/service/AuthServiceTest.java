@@ -53,6 +53,9 @@ class AuthServiceTest extends BaseTest {
     @Mock
     private ApplicationProperties applicationProperties;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -73,6 +76,11 @@ class AuthServiceTest extends BaseTest {
 
         when(userRepository.existsByEmailIgnoreCase(testEmail)).thenReturn(false);
         when(passwordEncoder.encode(testPassword)).thenReturn(encodedPassword);
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken("verification-token");
+        when(verificationTokenService.createToken(any(User.class), eq(TokenType.EMAIL_VERIFICATION), eq(Duration.ofHours(24))))
+                .thenReturn(verificationToken);
+        when(applicationProperties.getFrontendUrl()).thenReturn("http://frontend.example");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
             user.setId(1L);
@@ -155,6 +163,11 @@ class AuthServiceTest extends BaseTest {
 
         when(userRepository.existsByEmailIgnoreCase("TEST@EXAMPLE.COM")).thenReturn(false);
         when(passwordEncoder.encode(testPassword)).thenReturn(encodedPassword);
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken("verification-token");
+        when(verificationTokenService.createToken(any(User.class), eq(TokenType.EMAIL_VERIFICATION), eq(Duration.ofHours(24))))
+                .thenReturn(verificationToken);
+        when(applicationProperties.getFrontendUrl()).thenReturn("http://frontend.example");
         
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
@@ -196,11 +209,11 @@ class AuthServiceTest extends BaseTest {
         user.setLastName("User");
 
         String testToken = "hello_world_token_123";
-        String baseUrl = "http://localhost:8080";
-        String expectedResetLink = baseUrl + "/reset-password?token=" + testToken;
+        String frontendUrl = "http://frontend.example";
+        String expectedResetLink = frontendUrl + "/auth/verification/reset-password?token=" + testToken;
 
         when(userRepository.findByEmailIgnoreCase(testEmail)).thenReturn(Optional.of(user));
-        when(applicationProperties.getUrl()).thenReturn(baseUrl);
+        when(applicationProperties.getFrontendUrl()).thenReturn(frontendUrl);
         
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
@@ -226,5 +239,100 @@ class AuthServiceTest extends BaseTest {
         when(userRepository.findByEmailIgnoreCase("nonexistent@example.com")).thenReturn(Optional.empty());
 
         assertDoesNotThrow(() -> authService.handleForgotPasswordRequest(request));
+    }
+
+    @Test
+    void handlePasswordResetTokenVerification_ValidToken_DoesNotThrow() {
+        String token = "valid-token";
+        when(verificationTokenService.isValidToken(token, TokenType.PASSWORD_RESET)).thenReturn(true);
+
+        assertDoesNotThrow(() -> authService.handlePasswordResetTokenVerification(token));
+        verify(verificationTokenService).isValidToken(token, TokenType.PASSWORD_RESET);
+    }
+
+    @Test
+    void handlePasswordResetTokenVerification_InvalidToken_ThrowsInvalidTokenException() {
+        String token = "invalid-token";
+        when(verificationTokenService.isValidToken(token, TokenType.PASSWORD_RESET)).thenReturn(false);
+
+        assertThrows(com.optic.console.domain.auth.exception.InvalidTokenException.class,
+                () -> authService.handlePasswordResetTokenVerification(token));
+    }
+
+    @Test
+    void handlePasswordReset_ValidToken_UpdatesPasswordAndMarksTokenUsed() {
+        String tokenValue = "reset-token";
+        String newPassword = "NewSecurePass123!";
+
+        com.optic.console.domain.user.dto.ResetPasswordRequest request =
+                new com.optic.console.domain.user.dto.ResetPasswordRequest();
+        request.setToken(tokenValue);
+        request.setNewPassword(newPassword);
+        request.setNewPasswordConfirmation(newPassword);
+
+        User user = new User();
+        user.setEmail(testEmail);
+        user.setPassword(encodedPassword);
+
+        VerificationToken token = new VerificationToken();
+        token.setToken(tokenValue);
+        token.setUser(user);
+
+        when(verificationTokenService.getValidTokenOrThrowException(tokenValue, TokenType.PASSWORD_RESET))
+                .thenReturn(token);
+        when(passwordEncoder.encode(newPassword)).thenReturn("encoded-new-password");
+
+        authService.handlePasswordReset(request);
+
+        verify(passwordEncoder).encode(newPassword);
+        verify(userRepository).save(user);
+        verify(verificationTokenService).markAsUsed(token);
+    }
+
+    @Test
+    void handlePasswordReset_InvalidToken_PropagatesInvalidTokenException() {
+        String tokenValue = "invalid-token";
+
+        com.optic.console.domain.user.dto.ResetPasswordRequest request =
+                new com.optic.console.domain.user.dto.ResetPasswordRequest();
+        request.setToken(tokenValue);
+        request.setNewPassword(testPassword);
+        request.setNewPasswordConfirmation(testPassword);
+
+        when(verificationTokenService.getValidTokenOrThrowException(tokenValue, TokenType.PASSWORD_RESET))
+                .thenThrow(new com.optic.console.domain.auth.exception.InvalidTokenException());
+
+        assertThrows(com.optic.console.domain.auth.exception.InvalidTokenException.class,
+                () -> authService.handlePasswordReset(request));
+    }
+
+    @Test
+    void handleEmailVerification_ValidToken_MarksUserVerifiedAndTokenUsed() {
+        String tokenValue = "email-token";
+        User user = new User();
+        user.setEmail(testEmail);
+
+        VerificationToken token = new VerificationToken();
+        token.setToken(tokenValue);
+        token.setUser(user);
+
+        when(verificationTokenService.getValidTokenOrThrowException(tokenValue, TokenType.EMAIL_VERIFICATION))
+                .thenReturn(token);
+
+        authService.handleEmailVerification(tokenValue);
+
+        verify(userService).markAsVerified(user);
+        verify(verificationTokenService).markAsUsed(token);
+    }
+
+    @Test
+    void handleEmailVerification_InvalidToken_PropagatesInvalidTokenException() {
+        String tokenValue = "invalid-email-token";
+
+        when(verificationTokenService.getValidTokenOrThrowException(tokenValue, TokenType.EMAIL_VERIFICATION))
+                .thenThrow(new com.optic.console.domain.auth.exception.InvalidTokenException());
+
+        assertThrows(com.optic.console.domain.auth.exception.InvalidTokenException.class,
+                () -> authService.handleEmailVerification(tokenValue));
     }
 }

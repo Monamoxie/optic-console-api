@@ -6,8 +6,11 @@ import com.optic.console.domain.user.dto.AuthResponse;
 import com.optic.console.domain.user.dto.ForgotPasswordRequest;
 import com.optic.console.domain.user.dto.LoginRequest;
 import com.optic.console.domain.user.dto.RegisterRequest;
+import com.optic.console.domain.user.dto.ResetPasswordRequest;
+import com.optic.console.domain.auth.dto.EmailVerificationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -21,6 +24,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
@@ -58,7 +62,7 @@ class AuthControllerTest {
         // Just verify the service method is called
         doNothing().when(authService).register(any(RegisterRequest.class));
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/api/v1/auth/signup")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -98,7 +102,7 @@ class AuthControllerTest {
         request.setEmail("invalid-email");
         request.setPassword("short");
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/api/v1/auth/signup")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -179,7 +183,7 @@ class AuthControllerTest {
     void register_MissingRequiredFields_ShouldReturnBadRequest() throws Exception {
         RegisterRequest request = new RegisterRequest();
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/api/v1/auth/signup")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -209,11 +213,139 @@ class AuthControllerTest {
 
         doNothing().when(authService).register(any(RegisterRequest.class));
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/api/v1/auth/signup")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void verifyResetPassword_ValidToken_ShouldReturnOk() throws Exception {
+        String token = "valid-token";
+
+        doNothing().when(authService).handlePasswordResetTokenVerification(token);
+
+        mockMvc.perform(get("/api/v1/auth/verification/reset-password")
+                        .param("token", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Password reset token is valid"));
+    }
+
+    @Test
+    void verifyResetPassword_InvalidToken_ShouldReturnBadRequest() throws Exception {
+        String token = "invalid-token";
+
+        doNothing().when(authService).handlePasswordResetTokenVerification(token);
+        org.mockito.Mockito.doThrow(new com.optic.console.domain.auth.exception.InvalidTokenException("The token is invalid"))
+                .when(authService).handlePasswordResetTokenVerification(token);
+
+        mockMvc.perform(get("/api/v1/auth/verification/reset-password")
+                        .param("token", token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("The token is invalid"));
+    }
+
+    @Test
+    void resetPassword_ValidRequest_ShouldReturnOk() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest();
+        request.setToken("valid-token");
+        request.setNewPassword("NewSecurePass123!");
+        request.setNewPasswordConfirmation("NewSecurePass123!");
+
+        doNothing().when(authService).handlePasswordReset(any(ResetPasswordRequest.class));
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Password reset ws successful"));
+    }
+
+    @Test
+    void resetPassword_InvalidToken_ShouldReturnBadRequest() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest();
+        request.setToken("invalid-token");
+        request.setNewPassword("NewSecurePass123!");
+        request.setNewPasswordConfirmation("NewSecurePass123!");
+
+        org.mockito.Mockito.doThrow(new com.optic.console.domain.auth.exception.InvalidTokenException("The token is invalid"))
+                .when(authService).handlePasswordReset(any(ResetPasswordRequest.class));
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("The token is invalid"));
+    }
+
+    @Test
+    void verifyEmail_ValidToken_ShouldReturnOk() throws Exception {
+        EmailVerificationRequest request = new EmailVerificationRequest();
+        request.setToken("valid-email-token");
+
+        doNothing().when(authService).handleEmailVerification(request.getToken());
+
+        mockMvc.perform(post("/api/v1/auth/verification/email")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Email verification was successful"));
+    }
+
+    @Test
+    void verifyEmail_InvalidToken_ShouldReturnBadRequest() throws Exception {
+        EmailVerificationRequest request = new EmailVerificationRequest();
+        request.setToken("invalid-email-token");
+
+        org.mockito.Mockito.doThrow(new com.optic.console.domain.auth.exception.InvalidTokenException("The token is invalid"))
+                .when(authService).handleEmailVerification(request.getToken());
+
+        mockMvc.perform(post("/api/v1/auth/verification/email")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("The token is invalid"));
+    }
+
+    @Test
+    void login_WithRememberMe_ShouldPassFlagToService() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setEmail(testEmail);
+        request.setPassword(testPassword);
+        request.setRememberMe(true);
+
+        AuthResponse authResponse = AuthResponse.builder()
+                .token(testToken)
+                .email(testEmail)
+                .firstName("Test")
+                .lastName("User")
+                .build();
+
+        ArgumentCaptor<LoginRequest> captor = ArgumentCaptor.forClass(LoginRequest.class);
+        when(authService.login(any(LoginRequest.class))).thenReturn(authResponse);
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        Mockito.verify(authService).login(captor.capture());
+        LoginRequest captured = captor.getValue();
+        org.junit.jupiter.api.Assertions.assertTrue(Boolean.TRUE.equals(captured.getRememberMe()),
+                "rememberMe flag should be deserialized as true");
     }
 }

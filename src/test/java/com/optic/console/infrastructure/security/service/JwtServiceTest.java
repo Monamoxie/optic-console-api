@@ -87,6 +87,25 @@ class JwtServiceTest {
     }
 
     @Test
+    void generateToken_RememberMe_UsesLongerExpiration() {
+        long oneDayInMillis = 86400000L;
+        String token = jwtService.generateToken(TEST_EMAIL, true);
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(TEST_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        Date issuedAt = claims.getIssuedAt();
+        Date expiration = claims.getExpiration();
+        long actualExpiration = expiration.getTime() - issuedAt.getTime();
+
+        assertTrue(actualExpiration > oneDayInMillis,
+                "Remember-me token expiration should be greater than base expiration");
+    }
+
+    @Test
     void generateToken_ExpirationIsOneDay() {
         // Given
         long oneDayInMillis = 86400000L;
