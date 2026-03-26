@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 @Slf4j
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "com.optic.console.api")
 public class GlobalExceptionHandler {
 
     private final Environment environment;
