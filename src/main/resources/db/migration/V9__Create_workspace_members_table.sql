@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS workspace_members(
     CONSTRAINT fk_workspace_members_user FOREIGN KEY(user_id)
         REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_workspace_members_role FOREIGN KEY(role_id)
-        REFERENCES roles(id) ON DELETE CASCADE;
+        REFERENCES roles(id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_workspace_members_workspace_id ON workspace_members(workspace_id);

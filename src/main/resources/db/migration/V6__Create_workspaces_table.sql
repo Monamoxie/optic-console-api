@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS workspaces (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE NULL,
-    CONSTRAINT fk_workspaces_created_by FOREIGN_KEY (created_by)
+    CONSTRAINT fk_workspaces_created_by FOREIGN KEY (created_by)
         REFERENCES users(id) ON DELETE SET NULL
 );
 
