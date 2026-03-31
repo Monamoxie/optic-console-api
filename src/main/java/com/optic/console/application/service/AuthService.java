@@ -120,6 +120,20 @@ public class AuthService {
         verificationTokenService.markAsUsed(token);
     }
 
+    public AuthResponse getCurrentUser(String rawToken) {
+        String email = jwtService.extractSubject(rawToken);
+
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new BadCredentialsException("User not found for token subject"));
+
+        return AuthResponse.builder()
+                .token(rawToken)
+                .email(user.getEmail())
+                .firstName(user.getFirstName() != null ? user.getFirstName() : "")
+                .lastName(user.getLastName() != null ? user.getLastName() : "")
+                .build();
+    }
+
     @Transactional
     public void handleEmailVerification(String tokenString) {
         VerificationToken token = verificationTokenService.getValidTokenOrThrowException(

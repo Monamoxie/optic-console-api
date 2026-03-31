@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.optic.console.config.JwtProperties;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -83,6 +84,20 @@ public class JwtService {
                 .setExpiration(expiration)
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String extractSubject(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalArgumentException("Token cannot be null or empty");
+        }
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(signingKey)
+                .build()
+                .parseClaimsJws(token.trim())
+                .getBody();
+
+        return claims.getSubject();
     }
 }
 

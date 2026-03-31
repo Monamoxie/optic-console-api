@@ -89,6 +89,24 @@ public class AuthController {
         );
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> getCurrentUser(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader
+    ) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String rawToken = authorizationHeader.substring(7);
+
+        try {
+            AuthResponse authResponse = authService.getCurrentUser(rawToken);
+            return ResponseEntity.ok(authResponse);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
     @PostMapping("/verification/email")
     public ResponseEntity<ApiResponse<?>> verifyEmail(
             @Valid @RequestBody EmailVerificationRequest request
