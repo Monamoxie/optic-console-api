@@ -16,13 +16,13 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Getter @Setter 
-@NoArgsConstructor 
-@AllArgsConstructor 
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class User implements UserDetails {
 
-    @Id 
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -41,6 +41,10 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserStatus status = UserStatus.PENDING;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_accessed_workspace_id")
+//    private Workspace lastAccessedWorkspace;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
