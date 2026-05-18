@@ -49,20 +49,8 @@ public class WorkspaceMember {
         return role != null && "owner".equalsIgnoreCase(role.getSlug());
     }
 
-    public boolean isAdmin() {
-        return "admin".equals(role);
-    }
-
     public boolean isMember() {
-        return "member".equals(role);
-    }
-
-    public boolean canManageMembers() {
-        return isAdmin() || isOwner();
-    }
-
-    public boolean canManageSettings() {
-        return isAdmin() || isOwner();
+        return role != null && "member".equalsIgnoreCase(role.getSlug());
     }
 
 }
