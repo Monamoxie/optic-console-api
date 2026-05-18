@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -30,7 +30,7 @@ public class VerificationTokenService {
         token.setUser(user);
         token.setType(type);
         token.setToken(tokenGenerator.generate(32));
-        token.setExpiresAt(LocalDateTime.now().plus(validity));
+        token.setExpiresAt(Instant.now().plus(validity));
 
         return verificationTokenRepository.save(token);
     }
@@ -64,6 +64,6 @@ public class VerificationTokenService {
     @Scheduled(cron = "0 0 0 * * ?") // Run daily at midnight
     @Transactional
     public void cleanupExpiredTokens() {
-        verificationTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now().minusDays(7));
+        verificationTokenRepository.deleteByExpiresAtBefore(Instant.now().minus(Duration.ofDays(7)));
     }
 }

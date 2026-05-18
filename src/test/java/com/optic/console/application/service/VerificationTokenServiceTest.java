@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +55,7 @@ class VerificationTokenServiceTest {
         assertEquals(testToken, result.getToken());
         assertEquals(testUser, result.getUser());
         assertEquals(testTokenType, result.getType());
-        assertTrue(result.getExpiresAt().isAfter(LocalDateTime.now()));
+        assertTrue(result.getExpiresAt().isAfter(Instant.now()));
         assertNull(result.getUsedAt());
 
         verify(verificationTokenRepository).findByUserAndTypeAndUsedAtIsNull(testUser, testTokenType);
@@ -88,7 +88,7 @@ class VerificationTokenServiceTest {
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
         token.setType(testTokenType);
-        token.setExpiresAt(LocalDateTime.now().plusHours(1));
+        token.setExpiresAt(Instant.now().plus(Duration.ofHours(1)));
         
         when(verificationTokenRepository.findByTokenAndType(testToken, testTokenType))
             .thenReturn(Optional.of(token));
@@ -105,7 +105,7 @@ class VerificationTokenServiceTest {
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
         token.setType(testTokenType);
-        token.setExpiresAt(LocalDateTime.now().minusHours(1));
+        token.setExpiresAt(Instant.now().minus(Duration.ofHours(1)));
         
         when(verificationTokenRepository.findByTokenAndType(testToken, testTokenType))
             .thenReturn(Optional.of(token));
@@ -122,7 +122,7 @@ class VerificationTokenServiceTest {
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
         token.setType(testTokenType);
-        token.setExpiresAt(LocalDateTime.now().plusHours(1));
+        token.setExpiresAt(Instant.now().plus(Duration.ofHours(1)));
         token.markAsUsed();
         
         when(verificationTokenRepository.findByTokenAndType(testToken, testTokenType))
@@ -149,7 +149,7 @@ class VerificationTokenServiceTest {
     void cleanupExpiredTokens_DeletesOldTokens() {
         verificationTokenService.cleanupExpiredTokens();
 
-        verify(verificationTokenRepository).deleteByExpiresAtBefore(any(LocalDateTime.class));
+        verify(verificationTokenRepository).deleteByExpiresAtBefore(any(Instant.class));
     }
 
     @Test
@@ -181,7 +181,7 @@ class VerificationTokenServiceTest {
         VerificationToken token = new VerificationToken();
         token.setToken(testToken);
         token.setType(testTokenType);
-        token.setExpiresAt(LocalDateTime.now().minusSeconds(1)); // Just expired
+        token.setExpiresAt(Instant.now().minus(Duration.ofSeconds(1))); // Just expired
         
         when(verificationTokenRepository.findByTokenAndType(testToken, testTokenType))
             .thenReturn(Optional.of(token));
@@ -201,8 +201,8 @@ class VerificationTokenServiceTest {
         VerificationToken result = verificationTokenService.createToken(testUser, testTokenType, shortValidity);
 
         assertNotNull(result);
-        LocalDateTime expectedMin = LocalDateTime.now().plusMinutes(4);
-        LocalDateTime expectedMax = LocalDateTime.now().plusMinutes(6);
+        Instant expectedMin = Instant.now().plus(Duration.ofMinutes(4));
+        Instant expectedMax = Instant.now().plus(Duration.ofMinutes(6));
         assertTrue(result.getExpiresAt().isAfter(expectedMin) && result.getExpiresAt().isBefore(expectedMax),
                 "Expiration should be approximately 5 minutes from now");
     }
@@ -217,8 +217,8 @@ class VerificationTokenServiceTest {
         VerificationToken result = verificationTokenService.createToken(testUser, testTokenType, longValidity);
 
         assertNotNull(result);
-        LocalDateTime expectedMin = LocalDateTime.now().plusDays(29);
-        LocalDateTime expectedMax = LocalDateTime.now().plusDays(31);
+        Instant expectedMin = Instant.now().plus(Duration.ofDays(29));
+        Instant expectedMax = Instant.now().plus(Duration.ofDays(31));
         assertTrue(result.getExpiresAt().isAfter(expectedMin) && result.getExpiresAt().isBefore(expectedMax),
                 "Expiration should be approximately 30 days from now");
     }

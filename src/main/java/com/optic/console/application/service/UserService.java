@@ -5,7 +5,7 @@ import com.optic.console.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -15,7 +15,7 @@ public class UserService {
 
     public void markAsVerified(User user) {
         user.setEmailVerified(true);
-        user.setEmailVerifiedAt(LocalDateTime.now());
+        user.setEmailVerifiedAt(Instant.now());
         userRepository.save(user);
     }
 }

@@ -3,7 +3,7 @@ package com.optic.console.domain.auth;
 import com.optic.console.domain.user.User;
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Entity
@@ -25,15 +25,15 @@ public class VerificationToken {
     private User user;
 
     @Column(nullable = false)
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
 
-    private LocalDateTime usedAt;
+    private Instant usedAt;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
+        return Instant.now().isAfter(expiresAt);
     }
 
     public boolean isUsed() {
@@ -41,6 +41,6 @@ public class VerificationToken {
     }
 
     public void markAsUsed() {
-        this.usedAt = LocalDateTime.now();
+        this.usedAt = Instant.now();
     }
 }
