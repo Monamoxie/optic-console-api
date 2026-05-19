@@ -44,7 +44,7 @@ public class User implements UserDetails {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_accessed_workspace_id")
-//    private Workspace lastAccessedWorkspace;
+    private com.optic.console.domain.workspace.Workspace lastAccessedWorkspace;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
