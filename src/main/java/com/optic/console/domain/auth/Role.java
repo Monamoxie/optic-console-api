@@ -45,5 +45,8 @@ public class Role {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    public boolean hasCapability(String capability) {
+        return false; // V2: Will implement when capabilities array is added
+    }
 
 }
